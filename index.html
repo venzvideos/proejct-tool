@@ -21,6 +21,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:8px 14px;f
 .pri{background:var(--ac);color:#fff}
 .ghost{background:transparent;color:var(--mut);border:1px solid var(--bd)}
 .ok{background:transparent;color:var(--ok);border:1px solid var(--ok)}
+.secs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:14px;overflow-x:auto}.secs button{background:none;color:var(--mut);border-radius:0;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}.secs button.on{color:var(--ac);border-bottom-color:var(--ac)}.secs span{font-weight:400;margin-left:5px;font-size:12.5px}
 .bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .tabs{display:flex;gap:6px;margin-left:auto}.tabs button{background:transparent;color:var(--mut);border:1px solid var(--bd);padding:7px 12px}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 input,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;outline:none;width:100%}
@@ -31,6 +32,7 @@ input:focus,textarea:focus{border-color:var(--ac)}
 .st{font-size:13px;font-weight:600;white-space:nowrap}
 .meta{color:var(--mut);font-size:13px;margin:2px 0 6px}
 .notes{color:var(--mut);white-space:pre-wrap;word-break:break-word;margin:6px 0}
+.lnk{display:inline-block;color:var(--ac);font-size:13.5px;word-break:break-all;margin:4px 0;text-decoration:none}.lnk:hover{text-decoration:underline}
 .proof{max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in;display:block;margin:8px 0}
 .mini{border:1px dashed var(--bd);border-radius:8px;padding:9px;text-align:center;color:var(--mut);font-size:13px;margin:8px 0;cursor:pointer;outline:none}.mini:focus{border-color:var(--ac);color:var(--ac)}
 .acts{display:flex;gap:6px;margin-top:8px}.acts button{padding:6px 11px;font-size:13px}
@@ -56,6 +58,7 @@ textarea{min-height:80px;resize:vertical}
 </header>
 <p class="sum" id="sum"></p>
 
+<div class="secs" id="secs"></div>
 <div class="bar">
   <button class="pri" id="new">+ New project</button>
   <div class="tabs" id="tabs"><button data-f="all" class="on">All</button><button data-f="pending">Pending</button><button data-f="done">Done</button></div>
@@ -65,10 +68,11 @@ textarea{min-height:80px;resize:vertical}
 
 <div class="ov" id="ov"><div class="modal">
   <h2 id="mt">New project</h2>
-  <label>Project</label><input id="title" placeholder="Project name">
+  <label>Title</label><input id="title" placeholder="Title">
   <label>Details (paste here)</label><textarea id="notes"></textarea>
   <div class="two"><div><label>Subject</label><input id="subject" placeholder="e.g. Web Dev"></div>
   <div><label>Deadline</label><input id="deadline" type="date"></div></div>
+  <label>Website link</label><input id="link" placeholder="Paste website link (https://...)">
   <label>Screenshot proof</label>
   <div class="zone" id="zone" tabindex="0">Click here, press <b>Ctrl+V</b> to paste, or <u id="pick">upload</u><input type="file" accept="image/*" id="file" hidden></div>
   <div class="mf"><button class="ghost" id="cancel">Cancel</button><button class="pri" id="saveBtn">Save</button></div>
@@ -85,7 +89,7 @@ textarea{min-height:80px;resize:vertical}
 <div id="lb"><img alt=""></div>
 
 <script>
-var KEY="projects-v1",PK="profile-v1",P=[],me={name:"Vince",course:"",img:null},filter="all",editId=null,mImg=null,pImg=null;
+var KEY="projects-v1",PK="profile-v1",P=[],me={name:"Vince",course:"",img:null},filter="all",sec="Project",SECS=["Assignment","Project","Performance Task"],editId=null,mImg=null,pImg=null;
 try{P=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){}
 try{var sv=JSON.parse(localStorage.getItem(PK)||"null");if(sv)me=sv}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(P));localStorage.setItem(PK,JSON.stringify(me))}catch(e){alert("Storage is full - remove some images.")}}
@@ -104,9 +108,10 @@ function status(p){
   return{k:"ok",t:d+" day"+(d>1?"s":"")+" left",c:d<=3?"var(--warn)":"var(--mut)"}}
 function fmt(s){return new Date(s+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}
 
+function normUrl(s){s=s.trim();if(!s)return"";var l=s.toLowerCase();if(l.indexOf("http://")!==0&&l.indexOf("https://")!==0)s="https://"+s;try{var u=new URL(s);return(u.protocol==="http:"||u.protocol==="https:")?u.href:""}catch(e){return""}}
 function setImg(d){mImg=d;zoneImg($("zone"),d)}
-function openM(p){editId=p?p.id:null;$("mt").textContent=p?"Edit project":"New project";
-  $("title").value=p?p.title:"";$("notes").value=p?p.notes:"";$("subject").value=p?p.subject:"";$("deadline").value=p?p.deadline:"";setImg(p?p.img:null);
+function openM(p){editId=p?p.id:null;$("mt").textContent=p?"Edit "+(p.type||"Project").toLowerCase():"New "+sec.toLowerCase();
+  $("title").value=p?p.title:"";$("notes").value=p?p.notes:"";$("subject").value=p?p.subject:"";$("deadline").value=p?p.deadline:"";$("link").value=p?(p.link||""):"";setImg(p?p.img:null);
   $("ov").classList.add("show");setTimeout(function(){$("title").focus()},50)}
 $("new").onclick=function(){openM(null)};$("cancel").onclick=function(){$("ov").classList.remove("show")};
 wire($("zone"),setImg);
@@ -114,8 +119,8 @@ $("pick").onclick=function(){$("file").click()};
 $("file").onchange=function(){if(this.files[0])shrink(this.files[0],1100).then(setImg);this.value=""};
 $("saveBtn").onclick=function(){
   var t=$("title").value.trim();if(!t){$("title").focus();return}
-  var o={title:t,notes:$("notes").value.trim(),subject:$("subject").value.trim()||"General",deadline:$("deadline").value,img:mImg};
-  if(editId){P.forEach(function(p){if(p.id===editId)Object.assign(p,o)})}else{o.id=Date.now();o.done=false;P.unshift(o)}
+  var o={title:t,notes:$("notes").value.trim(),subject:$("subject").value.trim()||"General",deadline:$("deadline").value,link:normUrl($("link").value),img:mImg};
+  if(editId){P.forEach(function(p){if(p.id===editId)Object.assign(p,o)})}else{o.id=Date.now();o.done=false;o.type=sec;P.unshift(o)}
   save();$("ov").classList.remove("show");render()};
 
 function setPImg(d){pImg=d;zoneImg($("pzone"),d)}
@@ -133,18 +138,21 @@ $("tabs").onclick=function(e){var f=e.target.dataset.f;if(!f)return;filter=f;[].
 
 function render(){
   $("mname").textContent=me.name;
+  var sb=$("secs");sb.innerHTML="";SECS.forEach(function(s){var n=P.filter(function(p){return(p.type||"Project")===s&&!p.done}).length,b=el("button",s===sec?"on":"",s);b.appendChild(el("span",null,n));b.onclick=function(){sec=s;render()};sb.appendChild(b)});
+  $("new").textContent="+ New "+sec.toLowerCase();
   var a=$("av");a.style.backgroundImage=me.img?"url("+me.img+")":"";a.textContent=me.img?"":(me.name||"V").charAt(0).toUpperCase();
-  var dn=P.filter(function(p){return p.done}).length,od=P.filter(function(p){return status(p).k==="overdue"}).length;
-  $("sum").textContent=(me.course?me.course+" · ":"")+(P.length-dn)+" pending · "+dn+" done"+(od?" · "+od+" overdue":"");
-  var arr=P.filter(function(p){return filter==="all"||(filter==="done"?p.done:!p.done)});
+  var SP=P.filter(function(p){return(p.type||"Project")===sec}),dn=SP.filter(function(p){return p.done}).length,od=SP.filter(function(p){return status(p).k==="overdue"}).length;
+  $("sum").textContent=(me.course?me.course+" · ":"")+(SP.length-dn)+" pending · "+dn+" done"+(od?" · "+od+" overdue":"");
+  var arr=P.filter(function(p){return(p.type||"Project")===sec&&(filter==="all"||(filter==="done"?p.done:!p.done))});
   arr.sort(function(x,y){return(x.done-y.done)||((x.deadline||"9999")<(y.deadline||"9999")?-1:1)});
   var L=$("list");L.innerHTML="";
-  if(!arr.length){L.appendChild(el("div","empty",P.length?"Nothing here.":"No projects yet. Click “+ New project”."));return}
+  if(!arr.length){L.appendChild(el("div","empty",SP.length?"Nothing here.":"Nothing in "+sec.toLowerCase()+" yet. Click “+ New "+sec.toLowerCase()+"”."));return}
   arr.forEach(function(p){
     var s=status(p),c=el("div","card"),top=el("div","top");
     top.appendChild(el("div","t",p.title));var st=el("div","st",s.t);st.style.color=s.c;top.appendChild(st);c.appendChild(top);
     c.appendChild(el("div","meta",p.subject+(p.deadline?" · Due "+fmt(p.deadline):"")));
     if(p.notes)c.appendChild(el("div","notes",p.notes));
+    if(p.link){var a2=el("a","lnk","🔗 "+p.link.replace("https://","").replace("http://",""));a2.href=p.link;a2.target="_blank";a2.rel="noopener noreferrer";c.appendChild(a2)}
     if(p.img){var im=el("img","proof");im.src=p.img;im.alt="Proof";im.onclick=function(){$("lb").firstChild.src=p.img;$("lb").style.display="flex"};c.appendChild(im)}
     else{var z=el("div","mini","Click here, then Ctrl+V to paste proof screenshot");z.tabIndex=0;wire(z,function(d){p.img=d;save();render()});c.appendChild(z)}
     var ac=el("div","acts"),b=el("button",p.done?"ghost":"ok",p.done?"Reopen":"Mark done");b.onclick=function(){p.done=!p.done;save();render()};ac.appendChild(b);
