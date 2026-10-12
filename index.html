@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vince Activity Tracker</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1a2030;--mut:#6b7385;--bd:#e3e6ec;--ac:#4f46e5;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10131a;--card:#191d27;--tx:#eceef4;--mut:#9aa1b3;--bd:#2a3040;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+:root[data-theme="dark"]{--bg:#10131a;--card:#191d27;--tx:#eceef4;--mut:#9aa1b3;--bd:#2a3040;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 50px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+h1{font-size:21px;margin:0}
+.me{display:flex;align-items:center;gap:8px;background:none;color:var(--tx);border:0;padding:0;font-weight:600}
+.av{width:34px;height:34px;border-radius:50%;background:var(--ac) center/cover;color:#fff;display:grid;place-items:center;font-weight:700}
+.sum{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:8px 14px;font-weight:600}
+.pri{background:var(--ac);color:#fff}
+.ghost{background:transparent;color:var(--mut);border:1px solid var(--bd)}
+.ok{background:transparent;color:var(--ok);border:1px solid var(--ok)}
+.bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;margin-left:auto}.tabs button{background:transparent;color:var(--mut);border:1px solid var(--bd);padding:7px 12px}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+input,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;outline:none;width:100%}
+input:focus,textarea:focus{border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;gap:10px}
+.t{font-weight:600;font-size:16px;word-break:break-word}
+.st{font-size:13px;font-weight:600;white-space:nowrap}
+.meta{color:var(--mut);font-size:13px;margin:2px 0 6px}
+.notes{color:var(--mut);white-space:pre-wrap;word-break:break-word;margin:6px 0}
+.proof{max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in;display:block;margin:8px 0}
+.mini{border:1px dashed var(--bd);border-radius:8px;padding:9px;text-align:center;color:var(--mut);font-size:13px;margin:8px 0;cursor:pointer;outline:none}.mini:focus{border-color:var(--ac);color:var(--ac)}
+.acts{display:flex;gap:6px;margin-top:8px}.acts button{padding:6px 11px;font-size:13px}
+.empty{text-align:center;color:var(--mut);padding:36px 0}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.ov.show{display:flex}
+.modal{background:var(--card);border-radius:14px;width:100%;max-width:460px;max-height:92vh;overflow:auto;padding:20px}
+.modal h2{margin:0 0 4px;font-size:18px}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.zone{border:2px dashed var(--bd);border-radius:10px;padding:14px;text-align:center;color:var(--mut);cursor:pointer;outline:none;font-size:13px}.zone:focus{border-color:var(--ac);color:var(--ac)}
+.zone img{max-width:100%;max-height:150px;border-radius:8px;display:block;margin:8px auto 0}.zone u{color:var(--ac)}
+.mf{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:30}#lb img{max-width:100%;max-height:100%;border-radius:8px}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Vince Activity Tracker</h1>
+  <button class="me" id="meBtn"><span id="mname"></span><span class="av" id="av"></span></button>
+</header>
+<p class="sum" id="sum"></p>
+
+<div class="bar">
+  <button class="pri" id="new">+ New project</button>
+  <div class="tabs" id="tabs"><button data-f="all" class="on">All</button><button data-f="pending">Pending</button><button data-f="done">Done</button></div>
+</div>
+<div id="list"></div>
+</div>
+
+<div class="ov" id="ov"><div class="modal">
+  <h2 id="mt">New project</h2>
+  <label>Project</label><input id="title" placeholder="Project name">
+  <label>Details (paste here)</label><textarea id="notes"></textarea>
+  <div class="two"><div><label>Subject</label><input id="subject" placeholder="e.g. Web Dev"></div>
+  <div><label>Deadline</label><input id="deadline" type="date"></div></div>
+  <label>Screenshot proof</label>
+  <div class="zone" id="zone" tabindex="0">Click here, press <b>Ctrl+V</b> to paste, or <u id="pick">upload</u><input type="file" accept="image/*" id="file" hidden></div>
+  <div class="mf"><button class="ghost" id="cancel">Cancel</button><button class="pri" id="saveBtn">Save</button></div>
+</div></div>
+
+<div class="ov" id="pov"><div class="modal">
+  <h2>My profile</h2>
+  <label>Name</label><input id="pname">
+  <label>Course / school</label><input id="pcourse">
+  <label>Photo</label>
+  <div class="zone" id="pzone" tabindex="0">Click here, press <b>Ctrl+V</b> to paste, or <u id="ppick">upload</u><input type="file" accept="image/*" id="pfile" hidden></div>
+  <div class="mf"><button class="ghost" id="pcancel">Cancel</button><button class="pri" id="psave">Save</button></div>
+</div></div>
+<div id="lb"><img alt=""></div>
+
+<script>
+var KEY="projects-v1",PK="profile-v1",P=[],me={name:"Vince",course:"",img:null},filter="all",editId=null,mImg=null,pImg=null;
+try{P=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){}
+try{var sv=JSON.parse(localStorage.getItem(PK)||"null");if(sv)me=sv}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(P));localStorage.setItem(PK,JSON.stringify(me))}catch(e){alert("Storage is full - remove some images.")}}
+function $(i){return document.getElementById(i)}
+function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+function shrink(b,max){return new Promise(function(r){var f=new FileReader();f.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.78))};im.src=f.result};f.readAsDataURL(b)})}
+function pasted(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf("image")===0)return it[i].getAsFile();return null}
+function wire(z,cb,max){z.addEventListener("click",function(e){if(e.target.tagName!=="U")z.focus()});z.addEventListener("paste",function(e){var f=pasted(e);if(f){e.preventDefault();e.stopPropagation();shrink(f,max||1100).then(cb)}})}
+function zoneImg(z,d){var o=z.querySelector("img");if(o)o.remove();if(d){var i=document.createElement("img");i.src=d;z.appendChild(i)}}
+function status(p){
+  if(p.done)return{k:"done",t:"Done",c:"var(--ok)"};
+  if(!p.deadline)return{k:"none",t:"No deadline",c:"var(--mut)"};
+  var d=Math.round((new Date(p.deadline+"T00:00:00")-new Date().setHours(0,0,0,0))/864e5);
+  if(d<0)return{k:"overdue",t:"Overdue "+(-d)+"d",c:"var(--bad)"};
+  if(d===0)return{k:"today",t:"Due today",c:"var(--warn)"};
+  return{k:"ok",t:d+" day"+(d>1?"s":"")+" left",c:d<=3?"var(--warn)":"var(--mut)"}}
+function fmt(s){return new Date(s+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}
+
+function setImg(d){mImg=d;zoneImg($("zone"),d)}
+function openM(p){editId=p?p.id:null;$("mt").textContent=p?"Edit project":"New project";
+  $("title").value=p?p.title:"";$("notes").value=p?p.notes:"";$("subject").value=p?p.subject:"";$("deadline").value=p?p.deadline:"";setImg(p?p.img:null);
+  $("ov").classList.add("show");setTimeout(function(){$("title").focus()},50)}
+$("new").onclick=function(){openM(null)};$("cancel").onclick=function(){$("ov").classList.remove("show")};
+wire($("zone"),setImg);
+$("pick").onclick=function(){$("file").click()};
+$("file").onchange=function(){if(this.files[0])shrink(this.files[0],1100).then(setImg);this.value=""};
+$("saveBtn").onclick=function(){
+  var t=$("title").value.trim();if(!t){$("title").focus();return}
+  var o={title:t,notes:$("notes").value.trim(),subject:$("subject").value.trim()||"General",deadline:$("deadline").value,img:mImg};
+  if(editId){P.forEach(function(p){if(p.id===editId)Object.assign(p,o)})}else{o.id=Date.now();o.done=false;P.unshift(o)}
+  save();$("ov").classList.remove("show");render()};
+
+function setPImg(d){pImg=d;zoneImg($("pzone"),d)}
+$("meBtn").onclick=function(){$("pname").value=me.name;$("pcourse").value=me.course||"";setPImg(me.img);$("pov").classList.add("show")};
+$("pcancel").onclick=function(){$("pov").classList.remove("show")};
+wire($("pzone"),setPImg,320);
+$("ppick").onclick=function(){$("pfile").click()};
+$("pfile").onchange=function(){if(this.files[0])shrink(this.files[0],320).then(setPImg);this.value=""};
+$("psave").onclick=function(){me.name=$("pname").value.trim()||"Vince";me.course=$("pcourse").value.trim();me.img=pImg;save();$("pov").classList.remove("show");render()};
+document.addEventListener("paste",function(e){var f=pasted(e);if(!f)return;
+  if($("pov").classList.contains("show")){e.preventDefault();shrink(f,320).then(setPImg)}
+  else if($("ov").classList.contains("show")){e.preventDefault();shrink(f,1100).then(setImg)}});
+[$("ov"),$("pov")].forEach(function(o){o.onclick=function(e){if(e.target===o)o.classList.remove("show")}});
+$("tabs").onclick=function(e){var f=e.target.dataset.f;if(!f)return;filter=f;[].forEach.call($("tabs").children,function(b){b.classList.toggle("on",b.dataset.f===f)});render()};
+
+function render(){
+  $("mname").textContent=me.name;
+  var a=$("av");a.style.backgroundImage=me.img?"url("+me.img+")":"";a.textContent=me.img?"":(me.name||"V").charAt(0).toUpperCase();
+  var dn=P.filter(function(p){return p.done}).length,od=P.filter(function(p){return status(p).k==="overdue"}).length;
+  $("sum").textContent=(me.course?me.course+" · ":"")+(P.length-dn)+" pending · "+dn+" done"+(od?" · "+od+" overdue":"");
+  var arr=P.filter(function(p){return filter==="all"||(filter==="done"?p.done:!p.done)});
+  arr.sort(function(x,y){return(x.done-y.done)||((x.deadline||"9999")<(y.deadline||"9999")?-1:1)});
+  var L=$("list");L.innerHTML="";
+  if(!arr.length){L.appendChild(el("div","empty",P.length?"Nothing here.":"No projects yet. Click “+ New project”."));return}
+  arr.forEach(function(p){
+    var s=status(p),c=el("div","card"),top=el("div","top");
+    top.appendChild(el("div","t",p.title));var st=el("div","st",s.t);st.style.color=s.c;top.appendChild(st);c.appendChild(top);
+    c.appendChild(el("div","meta",p.subject+(p.deadline?" · Due "+fmt(p.deadline):"")));
+    if(p.notes)c.appendChild(el("div","notes",p.notes));
+    if(p.img){var im=el("img","proof");im.src=p.img;im.alt="Proof";im.onclick=function(){$("lb").firstChild.src=p.img;$("lb").style.display="flex"};c.appendChild(im)}
+    else{var z=el("div","mini","Click here, then Ctrl+V to paste proof screenshot");z.tabIndex=0;wire(z,function(d){p.img=d;save();render()});c.appendChild(z)}
+    var ac=el("div","acts"),b=el("button",p.done?"ghost":"ok",p.done?"Reopen":"Mark done");b.onclick=function(){p.done=!p.done;save();render()};ac.appendChild(b);
+    var ed=el("button","ghost","Edit");ed.onclick=function(){openM(p)};ac.appendChild(ed);
+    var dl=el("button","ghost","Delete");dl.onclick=function(){if(confirm("Delete this project?")){P=P.filter(function(x){return x.id!==p.id});save();render()}};ac.appendChild(dl);
+    c.appendChild(ac);L.appendChild(c)})}
+$("lb").onclick=function(){this.style.display="none"};
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){$("ov").classList.remove("show");$("pov").classList.remove("show");$("lb").style.display="none"}});
+render();
+</script>
+</body>
+</html>
